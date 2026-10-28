@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Voting Certificate Editor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap">
+<style>
+/* Layout: certificate preview beside three short numbered steps; stacks on phones */
+:root{
+  --bg:#f5f2f9; --panel:#ffffff; --stage:#ebe5f3; --ink:#1c1626; --muted:#6a6178;
+  --line:#e2d9ee; --accent:#e5337a; --accent-ink:#ffffff; --accent-soft:#fde4ee;
+  --display:"Sora", "Segoe UI", system-ui, sans-serif;
+  --body:"DM Sans", system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#131019; --panel:#1d1726; --stage:#0d0b12; --ink:#f1ecf7; --muted:#a59bb4;
+  --line:#2f2739; --accent:#ff5c9a; --accent-ink:#1a0b12; --accent-soft:#3a1828; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#131019; --panel:#1d1726; --stage:#0d0b12; --ink:#f1ecf7; --muted:#a59bb4;
+  --line:#2f2739; --accent:#ff5c9a; --accent-ink:#1a0b12; --accent-soft:#3a1828; color-scheme:dark}
+
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 40px}
+.wrap{max-width:1040px;margin:0 auto;display:grid;gap:20px}
+header h1{font:700 clamp(1.5rem,3vw,2rem)/1.15 var(--display);margin:0;letter-spacing:-.01em;text-wrap:balance}
+header p{margin:6px 0 0;color:var(--muted);max-width:60ch}
+.app{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
+@media (max-width:820px){.app{grid-template-columns:minmax(0,1fr)}}
+
+.stage{background:var(--stage);border-radius:18px;padding:20px;display:grid;gap:12px;min-width:0}
+.stage.dragging{outline:3px dashed var(--accent);outline-offset:-6px}
+.canvas-box{display:flex;justify-content:center;min-width:0}
+#cv{display:block;max-width:100%;max-height:76vh;width:auto;height:auto;border-radius:14px;touch-action:none;
+  box-shadow:0 10px 30px rgba(40,20,60,.18)}
+.hint{color:var(--muted);font-size:13px;margin:0;text-align:center}
+.link{background:none;border:0;padding:0;font:inherit;color:var(--accent);cursor:pointer;text-decoration:underline}
+
+.steps{display:grid;gap:12px}
+.step{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;display:grid;gap:12px}
+.step h2{font:600 15px/1.2 var(--display);margin:0;display:flex;align-items:center;gap:10px}
+.step h2 i{font-style:normal;width:24px;height:24px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:12px;flex:none}
+.note{font-size:13px;color:var(--muted);margin:0}
+.field{display:grid;gap:5px}
+.field > span{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+input[type=text]{width:100%;box-sizing:border-box;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.seg{display:flex;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+.seg label{flex:1;text-align:center;font-size:13px;padding:7px 4px;border-radius:7px;cursor:pointer}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label:has(input:checked){background:var(--accent);color:var(--accent-ink)}
+.seg label:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:1px}
+.swatches{display:flex;gap:8px}
+.swatches label{cursor:pointer}
+.swatches input{position:absolute;opacity:0;pointer-events:none}
+.swatches span{display:block;width:28px;height:28px;border-radius:50%;border:1px solid var(--line);box-sizing:border-box}
+.swatches input:checked + span{outline:2px solid var(--accent);outline-offset:2px}
+.swatches input:focus-visible + span{outline:2px dashed var(--accent);outline-offset:2px}
+.btn{font:500 14px/1 var(--body);border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;padding:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;width:100%;box-sizing:border-box}
+.btn:hover{border-color:var(--accent)}
+.tools{display:flex;align-items:center;gap:8px}
+.icon-btn{width:36px;height:36px;padding:0;margin-left:auto;flex:none}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700;font-size:15px;padding:14px}
+.btn:has(input:focus-visible),.btn:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.file{position:relative;overflow:hidden}
+.file input{position:absolute;inset:0;opacity:0;cursor:pointer}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:99px;font-size:14px;z-index:20}
+.modal{position:fixed;inset:0;background:rgba(10,6,16,.6);display:grid;place-items:center;z-index:30;padding:20px}
+.modal-card{background:var(--panel);border-radius:18px;padding:18px;max-width:min(520px,100%);max-height:90vh;display:grid;gap:12px;overflow:auto}
+.modal-card img{max-height:60vh;width:auto;margin:0 auto;border-radius:10px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Voting Certificate Editor</h1>
+    <p>Upload your certificate. The Female Choice photo and the serial number are covered automatically. Your image stays on your device.</p>
+  </header>
+
+  <div class="app">
+    <section class="stage" id="stage">
+      <div class="canvas-box"><canvas id="cv" width="930" height="1411" aria-label="Certificate preview"></canvas></div>
+      <p class="hint" id="sampleHint">This is a sample. Upload yours to start.</p>
+      <p class="hint">Cover not lined up? Drag the box or its corner dot. <button class="link" id="resetMasks" type="button">Reset</button></p>
+    </section>
+
+    <div class="steps">
+      <div class="step">
+        <h2><i>1</i>Upload certificate</h2>
+        <label class="btn file">Choose certificate<input type="file" id="certFile" accept="image/*"></label>
+      </div>
+
+      <div class="step">
+        <h2><i>2</i>Add watermark</h2>
+        <div class="seg" role="radiogroup" aria-label="Watermark type">
+          <label><input type="radio" name="wm" id="wmText" value="text" checked><span>Text</span></label>
+          <label><input type="radio" name="wm" id="wmImage" value="image"><span>Image</span></label>
+          <label><input type="radio" name="wm" id="wmNone" value="none"><span>None</span></label>
+        </div>
+        <div id="textOpts" class="steps">
+          <input type="text" id="textValue" value="@myfanbase" maxlength="60" aria-label="Watermark text">
+        </div>
+        <label class="btn file" id="imageOpts" hidden><span id="wmFileLabel">Choose logo image</span><input type="file" id="wmFile" accept="image/*"></label>
+        <div class="tools" id="tools">
+          <div class="swatches" id="swatches" role="radiogroup" aria-label="Text color">
+            <label><input type="radio" name="color" id="cPink" value="#e5337a" checked><span style="background:#e5337a"></span></label>
+            <label><input type="radio" name="color" id="cPurple" value="#8b3fd9"><span style="background:#8b3fd9"></span></label>
+            <label><input type="radio" name="color" id="cWhite" value="#ffffff"><span style="background:#ffffff"></span></label>
+            <label><input type="radio" name="color" id="cGrey" value="#8a8494"><span style="background:#8a8494"></span></label>
+            <label><input type="radio" name="color" id="cBlack" value="#111111"><span style="background:#111111"></span></label>
+          </div>
+          <button class="btn icon-btn" id="rotateBtn" type="button" aria-label="Rotate watermark" title="Rotate">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+          </button>
+        </div>
+        <div id="sliders" class="steps">
+          <label class="field"><span>Size</span><input type="range" id="size" min="20" max="200" value="100"></label>
+          <label class="field"><span>Visibility</span><input type="range" id="opacity" min="5" max="100" value="30"></label>
+        </div>
+      </div>
+
+      <div class="step">
+        <h2><i>3</i>Save</h2>
+        <button class="btn primary" id="saveBtn" type="button">Save as PNG</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+<div class="modal" id="fallback" hidden>
+  <div class="modal-card">
+    <strong>Your edited certificate</strong>
+    <p class="note">Long-press the image (phone) or right-click it (computer) and choose Save Image.</p>
+    <img id="fallbackImg" alt="Edited certificate">
+    <button class="btn" id="closeFallback" type="button">Close</button>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const cv = $('#cv'), ctx = cv.getContext('2d');
+const base = document.createElement('canvas'), bctx = base.getContext('2d', {willReadFrequently: true});
+let W = 930, H = 1411;
+
+// Positions on a standard certificate screenshot, as fractions of width/height
+const DEFAULT_MASKS = () => [
+  {x: .366, y: .309, w: .268, h: .180, r: .024},
+  {x: .062, y: .912, w: .490, h: .050, r: .010},
+];
+const S = {masks: DEFAULT_MASKS(), wm: 'text', text: '@myfanbase', color: '#e5337a', logo: null, size: 100, opacity: 30, rotate: 315, sel: null};
+const dlReady = window.claude?.use ? window.claude.use('downloads').catch(() => null) : Promise.resolve(null);
+
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+function rr(c, x, y, w, h, r) {
+  r = Math.max(0, Math.min(r, w / 2, h / 2));
+  c.beginPath();
+  c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r);
+  c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath();
+}
+
+// Average color of a thin ring just outside the box, so the cover blends into the card
+function ringColor(x, y, w, h) {
+  const p = Math.max(3, Math.round(W / 150));
+  const x0 = Math.max(0, Math.floor(x - p)), y0 = Math.max(0, Math.floor(y - p));
+  const x1 = Math.min(W, Math.ceil(x + w + p)), y1 = Math.min(H, Math.ceil(y + h + p));
+  const iw = x1 - x0, ih = y1 - y0;
+  if (iw <= 0 || ih <= 0) return '#ffffff';
+  const d = bctx.getImageData(x0, y0, iw, ih).data;
+  let r = 0, g = 0, b = 0, n = 0;
+  for (let j = 0; j < ih; j++) for (let i = 0; i < iw; i++) {
+    const px = x0 + i, py = y0 + j;
+    if (px >= x && px < x + w && py >= y && py < y + h) continue;
+    const k = (j * iw + i) * 4; r += d[k]; g += d[k + 1]; b += d[k + 2]; n++;
+  }
+  return n ? `rgb(${r / n | 0},${g / n | 0},${b / n | 0})` : '#ffffff';
+}
+function drawMask(c, m) {
+  const x = m.x * W, y = m.y * H, w = m.w * W, h = m.h * H;
+  c.fillStyle = ringColor(x, y, w, h);
+  rr(c, x, y, w, h, m.r * W); c.fill();
+}
+
+// Repeating pattern across the whole certificate, turned by the chosen angle
+function tile(c, sx, sy, fn) {
+  c.translate(W / 2, H / 2); c.rotate(S.rotate * Math.PI / 180);
+  const D = Math.hypot(W, H) / 2 + Math.max(sx, sy);
+  let row = 0;
+  for (let y = -D; y <= D; y += sy, row++)
+    for (let x = -D - (row % 2 ? sx / 2 : 0); x <= D; x += sx) fn(x, y);
+}
+function drawWatermark(c) {
+  const k = S.size / 100;
+  c.save(); c.globalAlpha = S.opacity / 100;
+  if (S.wm === 'text' && S.text.trim()) {
+    const fs = W * .05 * k;
+    c.font = `700 ${fs}px Sora, sans-serif`; c.fillStyle = S.color;
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    const tw = c.measureText(S.text).width;
+    tile(c, tw + fs * 2.2, fs * 3.2, (x, y) => c.fillText(S.text, x, y));
+  } else if (S.wm === 'image' && S.logo) {
+    const w = W * .25 * k, h = w * S.logo.height / S.logo.width;
+    tile(c, w * 1.5, h * 1.6, (x, y) => c.drawImage(S.logo, x - w / 2, y - h / 2, w, h));
+  }
+  c.restore();
+}
+
+function drawGuides(c) {
+  const s = W / (cv.getBoundingClientRect().width || W);
+  const col = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#e5337a';
+  c.save(); c.lineWidth = 2 * s; c.strokeStyle = col;
+  S.masks.forEach((m, i) => {
+    const sel = S.sel === i;
+    c.setLineDash(sel ? [] : [6 * s, 5 * s]);
+    rr(c, m.x * W, m.y * H, m.w * W, m.h * H, m.r * W); c.stroke();
+    if (sel) {
+      c.setLineDash([]); c.fillStyle = col;
+      c.beginPath(); c.arc((m.x + m.w) * W, (m.y + m.h) * H, 8 * s, 0, Math.PI * 2); c.fill();
+    }
+  });
+  c.restore();
+}
+
+function render(c, preview) {
+  c.clearRect(0, 0, W, H);
+  c.drawImage(base, 0, 0);
+  S.masks.forEach(m => drawMask(c, m));
+  drawWatermark(c);
+  if (preview) drawGuides(c);
+}
+let raf = 0;
+const draw = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; render(ctx, true); }); };
+
+function setBase(src, sample) {
+  W = src.naturalWidth || src.width; H = src.naturalHeight || src.height;
+  cv.width = base.width = W; cv.height = base.height = H;
+  bctx.clearRect(0, 0, W, H); bctx.drawImage(src, 0, 0);
+  $('#sampleHint').hidden = !sample;
+  S.sel = null; draw();
+}
+
+// ---------- dragging the cover boxes ----------
+function pt(e) {
+  const r = cv.getBoundingClientRect();
+  return {x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height};
+}
+function hitTest(p) {
+  const hs = 16 * W / cv.getBoundingClientRect().width;
+  const sm = S.masks[S.sel];
+  if (sm && Math.hypot(p.x - (sm.x + sm.w) * W, p.y - (sm.y + sm.h) * H) < hs) return {i: S.sel, op: 'resize'};
+  for (let i = S.masks.length - 1; i >= 0; i--) {
+    const m = S.masks[i];
+    if (p.x >= m.x * W && p.x <= (m.x + m.w) * W && p.y >= m.y * H && p.y <= (m.y + m.h) * H) return {i, op: 'move'};
+  }
+  return null;
+}
+let drag = null;
+cv.addEventListener('pointerdown', e => {
+  const p = pt(e), hit = hitTest(p);
+  S.sel = hit ? hit.i : null;
+  if (hit) { drag = {...hit, p0: p, o: {...S.masks[hit.i]}}; cv.setPointerCapture(e.pointerId); }
+  draw();
+});
+cv.addEventListener('pointermove', e => {
+  const p = pt(e);
+  if (!drag) {
+    const h = hitTest(p);
+    cv.style.cursor = !h ? 'default' : h.op === 'resize' ? 'nwse-resize' : 'move';
+    return;
+  }
+  const dx = (p.x - drag.p0.x) / W, dy = (p.y - drag.p0.y) / H, o = drag.o, m = S.masks[drag.i];
+  if (drag.op === 'resize') { m.w = clamp(o.w + dx, .02, 1 - m.x); m.h = clamp(o.h + dy, .01, 1 - m.y); }
+  else { m.x = clamp(o.x + dx, 0, 1 - m.w); m.y = clamp(o.y + dy, 0, 1 - m.h); }
+  draw();
+});
+cv.addEventListener('pointerup', () => drag = null);
+cv.addEventListener('pointercancel', () => drag = null);
+$('#resetMasks').onclick = () => { S.masks = DEFAULT_MASKS(); S.sel = null; draw(); };
+
+// ---------- controls ----------
+document.querySelectorAll('input[name=wm]').forEach(el => el.addEventListener('change', () => {
+  S.wm = el.value;
+  $('#textOpts').hidden = S.wm !== 'text';
+  $('#imageOpts').hidden = S.wm !== 'image';
+  $('#swatches').hidden = S.wm !== 'text';
+  $('#sliders').hidden = $('#tools').hidden = S.wm === 'none';
+  draw();
+}));
+document.querySelectorAll('input[name=color]').forEach(el => el.addEventListener('change', () => { S.color = el.value; draw(); }));
+$('#textValue').addEventListener('input', e => { S.text = e.target.value; draw(); });
+$('#size').addEventListener('input', e => { S.size = +e.target.value; draw(); });
+$('#opacity').addEventListener('input', e => { S.opacity = +e.target.value; draw(); });
+$('#rotateBtn').onclick = () => { S.rotate = (S.rotate + 45) % 360; draw(); };
+
+function loadFile(file, cb) {
+  if (!file || !file.type.startsWith('image/')) { toast('That file is not an image. Try a PNG or JPG screenshot.'); return; }
+  const img = new Image();
+  img.onload = () => cb(img);
+  img.onerror = () => toast('Could not open that image. Try a PNG or JPG.');
+  img.src = URL.createObjectURL(file);
+}
+const useCert = f => loadFile(f, img => { setBase(img, false); toast('Certificate loaded'); });
+$('#certFile').addEventListener('change', e => { useCert(e.target.files[0]); e.target.value = ''; });
+$('#wmFile').addEventListener('change', e => {
+  const f = e.target.files[0];
+  loadFile(f, img => { S.logo = img; $('#wmFileLabel').textContent = 'Change logo image'; draw(); });
+  e.target.value = '';
+});
+const stage = $('#stage');
+stage.addEventListener('dragover', e => { e.preventDefault(); stage.classList.add('dragging'); });
+stage.addEventListener('dragleave', () => stage.classList.remove('dragging'));
+stage.addEventListener('drop', e => { e.preventDefault(); stage.classList.remove('dragging'); useCert(e.dataTransfer.files[0]); });
+document.addEventListener('paste', e => {
+  const item = [...(e.clipboardData?.items || [])].find(i => i.type.startsWith('image/'));
+  if (item) useCert(item.getAsFile());
+});
+
+// ---------- save ----------
+let toastT;
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.hidden = false;
+  clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 2600);
+}
+$('#closeFallback').onclick = () => $('#fallback').hidden = true;
+$('#saveBtn').onclick = async () => {
+  const out = document.createElement('canvas'); out.width = W; out.height = H;
+  render(out.getContext('2d'), false);
+  const blob = await new Promise(r => out.toBlob(r, 'image/png'));
+  const name = 'voting-certificate-edited.png';
+  const dl = await dlReady;
+  if (dl) {
+    try { await dl.save({filename: name, data: blob}); toast('Saved'); return; }
+    catch (err) { if (err?.code === 'declined') { toast('Save cancelled'); return; } if (err?.code === 'rate_limited') { toast('A save prompt is already open'); return; } }
+  }
+  const url = URL.createObjectURL(blob);
+  if (!window.claude) { const a = document.createElement('a'); a.href = url; a.download = name; a.click(); toast('Saved'); return; }
+  $('#fallbackImg').src = url; $('#fallback').hidden = false;
+};
+
+// ---------- sample certificate (a stand-in layout, not a real certificate) ----------
+function figure(g, cx, cy, s, fill) {
+  g.fillStyle = fill;
+  g.beginPath(); g.arc(cx, cy, s * .32, 0, Math.PI * 2); g.fill();
+  g.beginPath(); g.ellipse(cx, cy + s * 1.05, s * .7, s * .62, 0, Math.PI, 0); g.fill();
+}
+function makeSample() {
+  const c = document.createElement('canvas'); c.width = 930; c.height = 1411;
+  const g = c.getContext('2d');
+  g.fillStyle = '#ffffff'; g.fillRect(0, 0, 930, 1411);
+  const gr = g.createLinearGradient(0, 0, 930, 1411);
+  gr.addColorStop(0, '#ebe4fb'); gr.addColorStop(.5, '#f4f2fb'); gr.addColorStop(1, '#dcf0fa');
+  g.fillStyle = gr; rr(g, 3, 3, 924, 1405, 64); g.fill();
+  g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+  g.fillStyle = '#1b1b22'; g.font = '700 30px Sora, sans-serif'; g.fillText('SAMPLE', 465, 140);
+  g.font = '700 60px Sora, sans-serif'; g.fillText('VOTING CERTIFICATE', 465, 268);
+  g.fillStyle = '#ee2f7a'; g.font = '500 34px "DM Sans", sans-serif'; g.fillText('Voting Certificate1', 465, 336);
+  [[81, '#2c2b33', '#55545f'], [345, '#d8c3a4', '#f5ecdf'], [609, '#2c2b33', '#55545f']].forEach(([x, bg, fg], i) => {
+    g.save(); rr(g, x, 443, 240, 240, 22); g.clip(); g.fillStyle = bg; g.fillRect(x, 443, 240, 240);
+    if (i === 1) figure(g, x + 120, 530, 120, fg);
+    else [[60, 520], [120, 505], [180, 520], [90, 600], [150, 600]].forEach(([fx, fy]) => figure(g, x + fx, fy, 56, fg));
+    g.restore();
+  });
+  g.fillStyle = '#6b6b75'; g.font = '400 34px "DM Sans", sans-serif'; g.fillText('2026 AWARDS (SAMPLE)', 465, 748);
+  g.fillStyle = '#111'; g.font = '700 44px "DM Sans", sans-serif';
+  g.fillText("FANS' CHOICE Category 2nd", 465, 830); g.fillText("VOTE /  FANS' CHOICE OF TH...", 465, 905);
+  g.fillStyle = '#d6dcef'; g.fillRect(66, 1022, 798, 3);
+  g.textAlign = 'left'; g.fillStyle = '#6b6b75'; g.font = '400 34px "DM Sans", sans-serif';
+  g.fillText('Participation Date', 66, 1108);
+  g.fillText('This certificate verifies that it was', 66, 1200); g.fillText('issued by the voting app.', 66, 1250);
+  g.font = '700 32px "DM Sans", sans-serif'; g.fillText('No. 00000SAMPLE00000', 66, 1333);
+  g.textAlign = 'right'; g.fillStyle = '#2a2a33'; g.font = '400 34px "DM Sans", sans-serif'; g.fillText('2026.10.28 17:12', 864, 1108);
+  return c;
+}
+
+setBase(makeSample(), true);
+Promise.all(['700 40px Sora', '500 40px "DM Sans"', '700 40px "DM Sans"'].map(f => document.fonts.load(f).catch(() => {})))
+  .then(() => { if (!$('#sampleHint').hidden) setBase(makeSample(), true); else draw(); });
+new ResizeObserver(draw).observe(cv);
+</script>
+</body>
+</html>
