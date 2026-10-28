@@ -10,4 +10,4 @@ Everything runs in your browser. Your images are never uploaded anywhere.
 
 ## Use it
 
-Visit https://mruson.github.io/voting-certificate-editor/ or open `index.html` in a browser.
+Visit https://bora-armying.github.io/army-stamp/ or open `index.html` in a browser.
