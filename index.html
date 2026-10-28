@@ -110,7 +110,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
           <label><input type="radio" name="wm" id="wmNone" value="none"><span>None</span></label>
         </div>
         <div id="textOpts" class="steps">
-          <input type="text" id="textValue" value="@myfanbase" maxlength="60" aria-label="Watermark text">
+          <input type="text" id="textValue" value="@armystamp613" maxlength="60" aria-label="Watermark text">
         </div>
         <label class="btn file" id="imageOpts" hidden><span id="wmFileLabel">Choose logo image</span><input type="file" id="wmFile" accept="image/*"></label>
         <div class="tools" id="tools">
@@ -160,7 +160,7 @@ const DEFAULT_MASKS = () => [
   {x: .366, y: .309, w: .268, h: .180, r: .024},
   {x: .062, y: .912, w: .490, h: .050, r: .010},
 ];
-const S = {cover: true, masks: DEFAULT_MASKS(), wm: 'text', text: '@myfanbase', color: '#e5337a', logo: null, size: 100, opacity: 30, rotate: 315, sel: null};
+const S = {cover: true, masks: DEFAULT_MASKS(), wm: 'text', text: '@armystamp613', color: '#e5337a', logo: null, size: 100, opacity: 30, rotate: 315, sel: null};
 const dlReady = window.claude?.use ? window.claude.use('downloads').catch(() => null) : Promise.resolve(null);
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
