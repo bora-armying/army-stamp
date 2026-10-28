@@ -1,13 +1,13 @@
-# Voting Certificate Editor
+# Fan Proof Editor
 
-A small web page for cleaning up a voting certificate screenshot before you share it.
+A small web page for adding a watermark to your fan proofs, like voting certificates and streaming receipts, before you share them.
 
-- Covers the middle (Female Choice) photo and the serial number automatically
 - Adds a repeating text or logo watermark, with color, size, visibility and rotation
+- On voting certificates, covers the middle (Female Choice) photo and the serial number automatically. Switch this off for other screenshots.
 - Saves the result as a PNG at full resolution
 
 Everything runs in your browser. Your images are never uploaded anywhere.
 
 ## Use it
 
-Open `index.html` in a browser, or visit the GitHub Pages site for this repo.
+Visit https://mruson.github.io/voting-certificate-editor/ or open `index.html` in a browser.

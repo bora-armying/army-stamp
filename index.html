@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<title>Voting Certificate Editor</title>
+<title>Fan Proof Editor</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap">
 <style>
@@ -83,20 +83,20 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 
 <div class="wrap">
   <header>
-    <h1>Voting Certificate Editor</h1>
-    <p>Upload your certificate. The Female Choice photo and the serial number are covered automatically. Your image stays on your device.</p>
+    <h1>Fan Proof Editor</h1>
+    <p>Upload a voting certificate or any screenshot, like a streaming receipt, and add your watermark. On voting certificates, the Female Choice photo and serial number are covered automatically. Your image stays on your device.</p>
   </header>
 
   <div class="app">
     <section class="stage" id="stage">
-      <div class="canvas-box"><canvas id="cv" width="930" height="1411" aria-label="Certificate preview"></canvas></div>
+      <div class="canvas-box"><canvas id="cv" width="930" height="1411" aria-label="Image preview"></canvas></div>
       <p class="hint" id="sampleHint">This is a sample. Upload yours to start.</p>
       <p class="hint" id="dragHint">Cover not lined up? Drag the box or its corner dot. <button class="link" id="resetMasks" type="button">Reset</button></p>
     </section>
 
     <div class="steps">
       <div class="step">
-        <h2><i>1</i>Upload certificate</h2>
+        <h2><i>1</i>Upload image</h2>
         <label class="btn file">Choose image<input type="file" id="certFile" accept="image/*"></label>
         <label class="switch"><input type="checkbox" id="coverOn" checked><span>Hide Female Choice photo and serial number</span></label>
         <p class="note">Turn this off for other screenshots, like streaming receipts.</p>
@@ -142,9 +142,9 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 <div class="toast" id="toast" hidden></div>
 <div class="modal" id="fallback" hidden>
   <div class="modal-card">
-    <strong>Your edited certificate</strong>
+    <strong>Your edited image</strong>
     <p class="note">Long-press the image (phone) or right-click it (computer) and choose Save Image.</p>
-    <img id="fallbackImg" alt="Edited certificate">
+    <img id="fallbackImg" alt="Edited image">
     <button class="btn" id="closeFallback" type="button">Close</button>
   </div>
 </div>
@@ -316,7 +316,7 @@ function loadFile(file, cb) {
   img.onerror = () => toast('Could not open that image. Try a PNG or JPG.');
   img.src = URL.createObjectURL(file);
 }
-const useCert = f => loadFile(f, img => { setBase(img, false); toast('Certificate loaded'); });
+const useCert = f => loadFile(f, img => { setBase(img, false); toast('Image loaded'); });
 $('#certFile').addEventListener('change', e => { useCert(e.target.files[0]); e.target.value = ''; });
 $('#wmFile').addEventListener('change', e => {
   const f = e.target.files[0];
@@ -343,7 +343,7 @@ $('#saveBtn').onclick = async () => {
   const out = document.createElement('canvas'); out.width = W; out.height = H;
   render(out.getContext('2d'), false);
   const blob = await new Promise(r => out.toBlob(r, 'image/png'));
-  const name = 'voting-certificate-edited.png';
+  const name = 'fan-proof-edited.png';
   const dl = await dlReady;
   if (dl) {
     try { await dl.save({filename: name, data: blob}); toast('Saved'); return; }
