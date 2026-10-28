@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<title>Fan Proof Editor</title>
+<title>ARMY Stamp</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap">
 <style>
@@ -83,7 +83,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 
 <div class="wrap">
   <header>
-    <h1>Fan Proof Editor</h1>
+    <h1>ARMY Stamp</h1>
     <p>Upload a voting certificate or any screenshot, like a streaming receipt, and add your watermark. On voting certificates, the Female Choice photo and serial number are covered automatically. Your image stays on your device.</p>
   </header>
 
@@ -343,7 +343,7 @@ $('#saveBtn').onclick = async () => {
   const out = document.createElement('canvas'); out.width = W; out.height = H;
   render(out.getContext('2d'), false);
   const blob = await new Promise(r => out.toBlob(r, 'image/png'));
-  const name = 'fan-proof-edited.png';
+  const name = 'army-stamp.png';
   const dl = await dlReady;
   if (dl) {
     try { await dl.save({filename: name, data: blob}); toast('Saved'); return; }

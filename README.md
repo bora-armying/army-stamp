@@ -1,4 +1,4 @@
-# Fan Proof Editor
+# ARMY Stamp
 
 A small web page for adding a watermark to your fan proofs, like voting certificates and streaming receipts, before you share them.
 
